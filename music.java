@@ -11,10 +11,10 @@ public class music extends MIDlet implements PlayerListener, CommandListener {
   String fileName;
   Enumeration e;
   Random r = new Random();
-  int i, j, fileCount = 590;
+  int i, j, fileCount = 590, playerNumber = 1;
   String[] FileNameArray = new String[fileCount];
   FileConnection dir, fc;
-  Player player;
+  Player player, player2;
   boolean started = true, paused = false;
   int debug = 0;
   
@@ -75,15 +75,27 @@ public class music extends MIDlet implements PlayerListener, CommandListener {
 		form.append("currently playing: " + fileName);
 		// gets the file connection to the song selected
 		fc = (FileConnection) Connector.open("file:///MemoryCard/MUSIC/Pony/" + fileName);
-		// creates a music player instance
-		player = Manager.createPlayer(fc.openInputStream(), "audio/mpeg");
-		debug++;
-		// starts the music player
-		player.start();
-		debug++;
-		// adds a listener
-		player.addPlayerListener(this);
-		// closes the resource or else there is a resource leak 
+		if(playerNumber == 1) {
+		    // creates a music player instance
+		    player = Manager.createPlayer(fc.openInputStream(), "audio/mpeg");
+		    // starts the music player
+		    player.start();
+		    // adds a listener
+		    player.addPlayerListener(this);
+		    
+		    player2.close();
+		}
+		else {
+		    // creates a music player instance
+		    player2 = Manager.createPlayer(fc.openInputStream(), "audio/mpeg");
+		    // starts the music player
+		    player2.start();
+		    // adds a listener
+		    player2.addPlayerListener(this);
+		    
+		    player.close();
+		}
+		// closes the resource or else there is a resource leak
 		fc.close();
 		debug++;
 	} catch(Exception e) {
@@ -99,7 +111,10 @@ public class music extends MIDlet implements PlayerListener, CommandListener {
 	    // closes the music player
 	    // if this isnt done, then there is a resource leak that crashes
 	    // the program and prevents new songs from being queued
-	    player.close();
+	    if(playerNumber == 1)
+		playerNumber = 2;
+	    else
+		playerNumber = 1;
 	    // reruns the main loop to get a new song
 	    mainLoop();
 	  } catch(Exception e) {
@@ -116,14 +131,20 @@ public class music extends MIDlet implements PlayerListener, CommandListener {
 	    // checks if the song was paused
 	    if(paused) {
 		// plays the song
-		player.start();
+		if(playerNumber == 1)
+		    player.start();
+		else
+		    player2.start();
 		// sets paused to false so that it will stop it next time
 		paused = false;
 	    }
 	    // if the pause was playing
 	    else {
 		// stops the player
-		player.stop();
+		if(playerNumber == 1)
+		    player.stop();
+		else
+		    player2.stop();
 		// sets paused to true so that it will play it next time
 		paused = true;
 	    }
@@ -134,10 +155,10 @@ public class music extends MIDlet implements PlayerListener, CommandListener {
       // if the next button was hit
       if(c == next) {
 	  try {
-	    // closes the music player
-	    // if this isnt done, then there is a resource leak that crashes
-	    // the program and prevents new songs from being queued
-	    player.close();
+	    if(playerNumber == 1)
+		playerNumber = 2;
+	    else
+		playerNumber = 1;
 	    // reruns the main loop to get a new song
 	    mainLoop();
 	  } catch(Exception e) {
